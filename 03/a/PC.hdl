@@ -1,0 +1,33 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/03/a/PC.hdl
+
+/**
+ * A 16-bit counter with load and reset control bits.
+ * if      (reset[t] == 1) out[t+1] = 0
+ * else if (load[t] == 1)  out[t+1] = in[t]
+ * else if (inc[t] == 1)   out[t+1] = out[t] + 1  (integer addition)
+ * else                    out[t+1] = out[t]
+ */
+
+CHIP PC {
+    IN in[16],load,inc,reset;
+    OUT out[16];
+
+    PARTS:
+    // Put your code here:
+    // 1. 레지스터 먼저
+    Register(in = finalOut, load = finalLoad, out = out, out = dataOut);
+    // 2. 레지스터에 write되는 조건 결정
+    Or(a = reset, b = load, out = or1);
+    Or(a = or1, b = inc, out = finalLoad);
+    // 3. 레지스터 input을 combinational logic으로 도출
+    //3.1 더하는연산인지
+    Add16(a = dataOut, b[0] = true, b[1..15] = false, out = add);
+    Mux16(a = dataOut, b = add, sel = inc, out = afterAdd);
+    //3.2 Load인지
+    Mux16(a = afterAdd, b = in, sel = load, out = afterLoad);
+    //3.3 0으로 reset하는 것인지(마지막이므로 레지스터에 들어갈 결과가 도출된다)
+    Mux16(a = afterLoad, b[0..15] = false, sel = reset, out = finalOut);
+}
